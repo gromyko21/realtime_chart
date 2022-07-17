@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Real time streaming</title>
+
+        <script src="https://cdn.jsdelivr.net/npm/d3-array@3"></script>
+        <script src="https://cdn.jsdelivr.net/npm/d3-color@3"></script>
+        <script src="https://cdn.jsdelivr.net/npm/d3-format@3"></script>
+        <script src="https://cdn.jsdelivr.net/npm/d3-interpolate@3"></script>
+        <script src="https://cdn.jsdelivr.net/npm/d3-time@3"></script>
+        <script src="https://cdn.jsdelivr.net/npm/d3-time-format@4"></script>
+        <script src="https://cdn.jsdelivr.net/npm/d3-scale@4"></script>
+        <script src="https://cdn.jsdelivr.net/npm/d3-selection@3"></script>
+        <script src="https://cdn.jsdelivr.net/npm/d3-axis@3"></script>
+        <script src="https://huww98.github.io/TimeChart/dist/timechart.min.js"></script>
+        <style>
+            #chart { width: 100%; height: 300px; margin-top: 300px; }
+        </style>
+    </head>
+    <body>
+        <div>
+            <p>Куммулятивная цена:</p>
+            <p id="total_price"></p>
+        </div>
+        <div id="chart"></div>
+        <script>
+            const el = document.getElementById('chart');
+            const dataPoints = {{prices|tojson}};
+            const chart = new TimeChart(el, {
+                series: [{ data: dataPoints, dataPoints, name: 'Real-time measurement streaming' }],
+                realTime: true,
+                xRange: { min: 0, max: 200 },
+            });
+            const ws = new WebSocket("ws://localhost:8000/ws/{{ticker_id}}");
+            let x = {{x}};
+            ws.onmessage = function(event) {
+                const measurement = JSON.parse(event.data);
+                x += 1
+                dataPoints.push({x, y:measurement["last_value_price"]});
+                chart.update();
+                document.getElementById("total_price").textContent=measurement["price"];
+            };
+        </script>
+    </body>
+</html>
